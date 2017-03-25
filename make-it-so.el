@@ -249,14 +249,13 @@ proceed to call `mis-action' for that action."
                  (cons dispatch-file
                        (delete dispatch-file files))
                files))
-       (if (or (mis-all-equal
-                (mapcar #'file-name-extension mis-current-files))
-               (y-or-n-p "Mixed extensions in selection, continue?"))
-           (let* ((ext (file-name-extension (car mis-current-files)))
-                  (candidates (mis-recipes-by-ext ext)))
-             (mis-competing-read
-              "Makefile: " candidates 'mis-action))
-         (error "Mixed extensions in selection"))))
+       (let* ((ext (if(mis-all-equal
+                       (mapcar #'file-name-extension mis-current-files))
+                       (file-name-extension (car mis-current-files))
+                     "mix"))
+              (candidates (mis-recipes-by-ext ext)))
+         (mis-competing-read
+          "Makefile: " candidates 'mis-action))))
     (t
      (error "Must be called from dired"))))
 
@@ -414,7 +413,10 @@ Switch to other window afterwards."
   "Make it so for recipe X."
   (let* ((sources mis-current-files)
          (source (file-name-nondirectory (car sources)))
-         (ext (file-name-extension source))
+         (ext (if (mis-all-equal
+                   (mapcar #'file-name-extension mis-current-files))
+                  (file-name-extension source)
+                "mix"))
          (basedir (or (file-name-directory source)
                       default-directory))
          (dir (expand-file-name
